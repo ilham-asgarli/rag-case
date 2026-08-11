@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Lumen Corpus">
+  <rect width="32" height="32" rx="7" fill="#2a2521" />
+  <g stroke="#c77420" stroke-width="2.2" stroke-linecap="round" fill="none">
+    <path d="M9 10h9" />
+    <path d="M9 15h5" />
+    <circle cx="19" cy="19" r="5" />
+    <path d="M22.8 22.8 25.5 25.5" />
+  </g>
+</svg>
