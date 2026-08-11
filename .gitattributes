@@ -1,0 +1,22 @@
+# Force LF in the repository *and* in every working tree, on every platform.
+#
+# This is load-bearing, not cosmetic. Ingestion detects changed documents by
+# hashing file bytes, and citation highlighting uses character offsets into the
+# chunk text. Under Git's default autocrlf on Windows, a clone would produce
+# CRLF while a macOS or Linux clone produces LF — the same document would hash
+# differently per platform, so every file would look "changed" on first ingest,
+# and highlight offsets would drift by one per preceding line.
+* text=auto eol=lf
+
+# Binary assets — never touch these
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.woff  binary
+*.woff2 binary
+
+# Lockfile: generated, so keep it out of review diffs
+pnpm-lock.yaml linguist-generated=true -diff
