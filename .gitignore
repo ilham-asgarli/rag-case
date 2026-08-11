@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+.next/
+dist/
+out/
+*.tsbuildinfo
+
+# Turborepo
+.turbo/
+
+# Environment — .env.example is the committed contract
+.env
+.env.local
+.env.*.local
+
+# Test and coverage
+coverage/
+.vitest/
+
+# Archives — the corpus is committed extracted under data/, never as a zip
+*.zip
+*.tar
+*.tar.gz
+*.7z
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Editors and OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Claude Code — personal, machine-local settings
+.claude/settings.local.json
+CLAUDE.local.md
