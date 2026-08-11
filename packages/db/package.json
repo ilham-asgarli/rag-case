@@ -1,0 +1,35 @@
+{
+  "name": "@rag/db",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "generate": "drizzle-kit generate",
+    "generate:auth": "better-auth-cli generate --config scripts/auth-schema-source.ts --output src/schema/auth.ts -y",
+    "migrate": "tsx src/scripts/migrate.ts",
+    "seed": "tsx src/scripts/seed.ts",
+    "analyze": "tsx src/scripts/analyze.ts",
+    "studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "@rag/contracts": "workspace:*",
+    "drizzle-orm": "catalog:",
+    "postgres": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@better-auth/cli": "1.4.21",
+    "@better-auth/oauth-provider": "catalog:",
+    "@rag/config": "workspace:*",
+    "@types/node": "catalog:",
+    "better-auth": "catalog:",
+    "drizzle-kit": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  }
+}

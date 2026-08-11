@@ -12,7 +12,17 @@ import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { extname } from "node:path";
 
-const FORMATTABLE = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".json", ".jsonc", ".css"]);
+const FORMATTABLE = new Set([
+  ".ts",
+  ".tsx",
+  ".js",
+  ".jsx",
+  ".mjs",
+  ".cjs",
+  ".json",
+  ".jsonc",
+  ".css",
+]);
 
 const readStdin = async () => {
   const chunks = [];

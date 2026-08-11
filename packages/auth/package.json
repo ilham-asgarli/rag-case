@@ -1,0 +1,27 @@
+{
+  "name": "@rag/auth",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./resource": "./src/resource.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "seed": "tsx src/scripts/seed.ts"
+  },
+  "dependencies": {
+    "@better-auth/oauth-provider": "catalog:",
+    "@rag/contracts": "workspace:*",
+    "@rag/db": "workspace:*",
+    "better-auth": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@rag/config": "workspace:*",
+    "@types/node": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  }
+}

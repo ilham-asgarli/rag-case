@@ -1,0 +1,50 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+  - "tools/*"
+
+# pnpm blocks postinstall scripts by default. esbuild's postinstall links the
+# prebuilt platform binary that vitest and tsx execute, so it must be allowed;
+# nothing else in the tree needs one.
+allowBuilds:
+  # Optional Better Auth adapters we do not use — this project is Drizzle +
+  # postgres.js. Denying their build scripts keeps them from compiling native
+  # binaries we would never load.
+  "@prisma/client": false
+  better-sqlite3: false
+  esbuild: true
+
+# Pinned once, consumed everywhere via `catalog:` so a version can never drift
+# between the web app, the MCP server, and the shared packages.
+catalog:
+  "@anthropic-ai/sdk": 0.116.0
+  "@better-auth/oauth-provider": 1.6.26
+  "@modelcontextprotocol/hono": 2.0.0
+  "@modelcontextprotocol/server": 2.0.0
+  "@types/node": 26.2.0
+  "@types/react": 19.2.18
+  "@types/react-dom": 19.2.4
+  better-auth: 1.6.26
+  chokidar: 5.0.0
+  drizzle-kit: 0.31.10
+  drizzle-orm: 0.45.2
+  hono: 4.13.1
+  next: 16.3.0
+  postgres: 3.4.9
+  react: 19.2.8
+  react-dom: 19.2.8
+  tsx: 4.23.12
+  typescript: 7.0.2
+  vitest: 4.1.10
+  zod: 4.4.3
+
+minimumReleaseAgeExclude:
+  - '@biomejs/biome@2.5.8'
+  - '@biomejs/cli-darwin-arm64@2.5.8'
+  - '@biomejs/cli-darwin-x64@2.5.8'
+  - '@biomejs/cli-linux-arm64-musl@2.5.8'
+  - '@biomejs/cli-linux-arm64@2.5.8'
+  - '@biomejs/cli-linux-x64-musl@2.5.8'
+  - '@biomejs/cli-linux-x64@2.5.8'
+  - '@biomejs/cli-win32-arm64@2.5.8'
+  - '@biomejs/cli-win32-x64@2.5.8'

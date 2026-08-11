@@ -1,0 +1,35 @@
+{
+  "name": "rag-case",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.21.0",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "start": "turbo run start",
+    "typecheck": "turbo run typecheck",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "verify": "pnpm typecheck && pnpm lint && pnpm test",
+    "db:generate": "pnpm --filter @rag/db generate",
+    "db:migrate": "pnpm --filter @rag/db migrate",
+    "db:seed": "pnpm --filter @rag/auth seed",
+    "db:analyze": "pnpm --filter @rag/db analyze",
+    "db:studio": "pnpm --filter @rag/db studio",
+    "ingest": "pnpm --filter @rag/ingest start",
+    "mcp:inspect": "pnpm dlx @modelcontextprotocol/inspector@2.1.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.8",
+    "@types/node": "26.2.0",
+    "turbo": "2.10.9",
+    "typescript": "7.0.2",
+    "vitest": "4.1.10"
+  }
+}

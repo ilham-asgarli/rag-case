@@ -1,0 +1,22 @@
+{
+  "name": "@rag/ingest",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/cli.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@rag/contracts": "workspace:*",
+    "@rag/core": "workspace:*",
+    "@rag/db": "workspace:*",
+    "chokidar": "catalog:"
+  },
+  "devDependencies": {
+    "@rag/config": "workspace:*",
+    "@types/node": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  }
+}
