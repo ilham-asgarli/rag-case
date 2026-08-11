@@ -45,6 +45,17 @@ reviewer is most likely to use.
 **An open redirect.** The sign-in page passed `?next=` straight to `router.push()`, so
 `?next=https://evil.example` would have redirected a freshly authenticated user off-site.
 
+**A type assertion that lied at runtime.** The dashboard aggregates were written as
+`sql<number>` and `sql<Date>`, which assert a type without converting one — Drizzle decodes per
+field, and a bare SQL fragment has no decoder. Counts arrived as `"142"` and `max(indexed_at)` as
+a string that threw on `.toISOString()`, so the admin stats endpoint returned a 500. The types
+said the code was correct in exactly the place it was not.
+
+**A lexical arm that never fired.** `websearch_to_tsquery` ANDs its terms, so a full question
+matched only a chunk containing every stem — in practice nothing. Hybrid retrieval silently fell
+back to dense-only for chat questions, which is precisely where the exact figures the lexical arm
+exists to catch get asked about.
+
 **Two copies of `drizzle-orm`.** pnpm resolves it per peer-dependency context, so importing it
 from two packages produced distinct copies whose types would not unify.
 
@@ -58,7 +69,13 @@ could not resolve.
   only visible by executing the system and timing it — 39 documents after five minutes made the
   performance problem obvious.
 - **The type checker**, under strict settings. It found the open redirect (via `typedRoutes`) and
-  the duplicate `drizzle-orm`.
+  the duplicate `drizzle-orm`. It could not find the bad `sql<T>` assertions, which is the point:
+  a claim about a runtime value is only worth what verifies it, so those now carry `.mapWith()`
+  decoders and the response is parsed against its schema at the boundary.
+- **Inspecting intermediate values, not just outputs.** Every end-to-end check passed while the
+  lexical arm was dead — all five sample questions still returned the right document, because the
+  dense arm carried them. The defect was visible only in the per-arm ranks the API reports, where
+  every result showed a null keyword rank.
 - **Reading the installed package** rather than the documentation, for every API the build depends
   on. All three misremembered APIs were caught by grepping the shipped `.d.mts` files and the npm
   registry.
