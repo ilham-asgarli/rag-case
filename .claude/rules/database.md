@@ -11,16 +11,20 @@ The Drizzle schema is the source of truth. Migrations are **generated from it, t
 never authored from scratch, and never edited once applied. To change an applied migration, add
 a new one. Use `/db-migrate` for the full sequence.
 
-## What drizzle-kit cannot express
+## What drizzle-kit does and does not emit
 
-These are hand-added to the generated SQL every time the `chunks` table changes shape:
+Verified against drizzle-kit 0.31.10. It **does** emit, from the schema definitions:
 
 - `CREATE INDEX ... USING hnsw (embedding vector_cosine_ops)`
 - `CREATE INDEX ... USING gin (tsv)`
 - the `tsv` column as `GENERATED ALWAYS AS (to_tsvector('english', ...)) STORED`
-- `CREATE EXTENSION IF NOT EXISTS vector`
 
-If a migration touches `chunks` and contains none of these, it is incomplete.
+It does **not** emit `CREATE EXTENSION IF NOT EXISTS vector`. Without that statement the
+`vector(1024)` column type does not exist and the migration fails on a fresh database, so add it
+as the first statement of the first migration.
+
+Still read every generated migration before applying it. A rename that drizzle-kit reads as
+drop-then-add will destroy data regardless of what it gets right elsewhere.
 
 ## Invariants
 

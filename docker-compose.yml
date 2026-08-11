@@ -19,7 +19,11 @@ services:
       # 5433 on the host: a native PostgreSQL install commonly already owns 5432.
       - "5433:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      # PostgreSQL 18+ images expect a single mount at /var/lib/postgresql and
+      # place the cluster in a major-version subdirectory beneath it. Mounting
+      # the older /var/lib/postgresql/data path makes the container refuse to
+      # start ("unused mount/volume").
+      - pgdata:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U rag -d rag"]
       interval: 5s

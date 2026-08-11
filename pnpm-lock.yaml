@@ -260,9 +260,6 @@ importers:
       '@rag/db':
         specifier: workspace:*
         version: link:../db
-      drizzle-orm:
-        specifier: 'catalog:'
-        version: 0.45.2(@prisma/client@5.22.0)(@types/pg@8.21.0)(better-sqlite3@12.11.1)(kysely@0.29.5)(pg@8.23.0)(postgres@3.4.9)
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -4541,6 +4538,7 @@ snapshots:
       kysely: 0.29.5
       pg: 8.23.0
       postgres: 3.4.9
+    optional: true
 
   electron-to-chromium@1.5.403: {}
 

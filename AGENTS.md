@@ -56,8 +56,10 @@ Do not substitute these. Changing the embedding model or its dimension count req
 - **Abstention is measured, not prompted.** Zero citation deltas in a response means
   `abstained: true`. When a question that should be answerable comes back abstained, fix
   retrieval — never loosen the grounding prompt to force an answer.
-- **pgvector**: `drizzle-kit` cannot emit HNSW or GIN index statements, so they are hand-added to
-  the generated migration SQL. Run `ANALYZE` after a bulk ingest or the planner ignores them.
+- **pgvector**: `drizzle-kit` 0.31 does emit the HNSW index, the GIN index, and the generated
+  `tsvector` column, but **not** `CREATE EXTENSION vector` — without it the `vector(1024)` column
+  type does not exist and the migration fails. Add it at the top of the first migration. Run
+  `ANALYZE` after a bulk ingest or the planner ignores the indexes.
 - **Voyage `input_type` is asymmetric**: `"document"` when indexing, `"query"` when searching.
   Swapping them silently degrades recall and raises no error.
 - **`data/corpus` is source data.** Never reformat, regenerate, or lint it.

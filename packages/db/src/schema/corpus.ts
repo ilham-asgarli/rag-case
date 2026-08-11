@@ -94,9 +94,9 @@ export const chunks = pgTable(
   (table) => [
     index("chunks_document_id_idx").on(table.documentId),
     uniqueIndex("chunks_document_ordinal_key").on(table.documentId, table.ordinal),
-    // Both of the following are re-stated by hand in the migration SQL, because
-    // drizzle-kit does not emit `USING hnsw` operator classes or GIN indexes on
-    // a custom type. See .claude/skills/db-migrate.
+    // drizzle-kit emits both of these correctly, including the operator class.
+    // What it does not emit is `CREATE EXTENSION vector`, which the first
+    // migration adds by hand. See .claude/skills/db-migrate.
     index("chunks_embedding_hnsw_idx").using("hnsw", table.embedding.op("vector_cosine_ops")),
     index("chunks_tsv_gin_idx").using("gin", table.tsv),
   ],

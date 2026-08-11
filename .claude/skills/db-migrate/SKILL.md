@@ -4,9 +4,9 @@ description: Generate, hand-patch, and apply a Drizzle migration for this projec
 disable-model-invocation: true
 ---
 
-`drizzle-kit` cannot express HNSW indexes, GIN indexes, generated `tsvector` columns, or
-`CREATE EXTENSION`. Applying a generated migration without patching it produces a schema that
-works but ignores every index.
+drizzle-kit 0.31 emits the HNSW index, the GIN index, and the generated `tsvector` column from
+the schema definitions. It does **not** emit `CREATE EXTENSION vector`, without which the
+`vector(1024)` column type does not exist and the migration fails on a fresh database.
 
 ## Steps
 
@@ -20,20 +20,19 @@ works but ignores every index.
    the schema change intended and nothing more — a rename that drizzle-kit reads as drop-then-add
    destroys data.
 
-3. **Patch** the file if it touches `chunks` or is the first migration. Required statements:
+3. **Patch** the first migration so it begins with the extension:
 
    ```sql
-   CREATE EXTENSION IF NOT EXISTS vector;
+   CREATE EXTENSION IF NOT EXISTS vector;--> statement-breakpoint
+   ```
 
-   ALTER TABLE chunks ADD COLUMN tsv tsvector
-     GENERATED ALWAYS AS (
-       to_tsvector('english', coalesce(heading_text, '') || ' ' || content)
-     ) STORED;
+   Then confirm the migration actually contains these three, and hand-add any that are missing:
 
-   CREATE INDEX chunks_embedding_hnsw_idx ON chunks
-     USING hnsw (embedding vector_cosine_ops);
-
-   CREATE INDEX chunks_tsv_gin_idx ON chunks USING gin (tsv);
+   ```sql
+   "embedding" vector(1024)
+   "tsv" "tsvector" GENERATED ALWAYS AS (to_tsvector('english', coalesce(heading_text, '') || ' ' || content)) STORED
+   CREATE INDEX "chunks_embedding_hnsw_idx" ON "chunks" USING hnsw ("embedding" vector_cosine_ops);
+   CREATE INDEX "chunks_tsv_gin_idx" ON "chunks" USING gin ("tsv");
    ```
 
 4. **Apply**
