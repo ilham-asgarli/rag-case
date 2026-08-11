@@ -1,4 +1,5 @@
 import { type ApiError, ERROR_STATUS, type ErrorCode } from "@rag/contracts";
+import { ProviderError } from "@rag/core";
 import { NextResponse } from "next/server";
 import type { z } from "zod";
 import { HttpError } from "./guards";
@@ -18,6 +19,20 @@ export const toErrorResponse = (error: unknown): NextResponse<ApiError> => {
   if (error instanceof HttpError) {
     return errorResponse(error.code, error.message);
   }
+
+  // A provider failure is not an internal bug, and telling the two apart
+  // matters: "the embedding provider is rate limited" is actionable, whereas
+  // "something went wrong" sends someone reading server logs for no reason.
+  if (error instanceof ProviderError) {
+    console.error("Provider error:", error.message);
+    return error.status === 429
+      ? errorResponse(
+          "rate_limited",
+          "The embedding provider is rate limiting this key. Wait a moment and retry.",
+        )
+      : errorResponse("provider_error", "A model provider is unavailable. Please try again.");
+  }
+
   console.error("Unhandled route error:", error);
   return errorResponse("internal", "Something went wrong. Please try again.");
 };

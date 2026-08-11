@@ -1,5 +1,5 @@
 import { ingest } from "@rag/core";
-import { listIngestionRuns } from "@rag/db";
+import { listIngestionRuns, resolveFromRepoRoot } from "@rag/db";
 import { NextResponse } from "next/server";
 import { rateLimit, toErrorResponse } from "@/server/api";
 import { requireAdmin } from "@/server/guards";
@@ -30,7 +30,7 @@ export async function POST(): Promise<Response> {
     rateLimit(`ingest:${session.user.id}`, 3, 60_000);
 
     const result = await ingest({
-      corpusDir: process.env.CORPUS_DIR ?? "./data/corpus",
+      corpusDir: resolveFromRepoRoot(process.env.CORPUS_DIR ?? "./data/corpus"),
       trigger: "dashboard",
     });
 

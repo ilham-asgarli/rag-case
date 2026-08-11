@@ -1,5 +1,5 @@
 export { type Database, getDb } from "./client";
-export { loadRootEnv } from "./env";
+export { findRepoRoot, loadRootEnv, resolveFromRepoRoot } from "./env";
 export * from "./queries/corpus";
 export * from "./queries/dashboard";
 export * from "./queries/operations";

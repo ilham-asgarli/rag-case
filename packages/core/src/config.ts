@@ -52,5 +52,22 @@ export const ANSWER = {
   effort: "low",
 } as const;
 
-/** Batch size for embedding requests during ingestion. */
-export const EMBED_BATCH_SIZE = 96;
+/**
+ * Inputs per embedding request.
+ *
+ * Voyage accepts up to 128, but a free-tier account without a payment method
+ * is capped at 10K tokens per minute. Keeping batches modest means a single
+ * request stays inside that cap, so ingestion succeeds (slowly) on a free key
+ * rather than failing outright.
+ */
+export const EMBED_BATCH_SIZE = 32;
+
+/**
+ * Documents chunked and embedded together before being written.
+ *
+ * Embedding is batched across documents rather than per document — on a corpus
+ * where each document yields one chunk, per-document embedding meant one API
+ * round trip per document. The window bounds peak memory on a large corpus
+ * while still collapsing hundreds of round trips into a handful.
+ */
+export const INGEST_WINDOW = 200;

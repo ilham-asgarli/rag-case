@@ -1,6 +1,5 @@
-import { resolve } from "node:path";
 import { ingest } from "@rag/core";
-import { loadRootEnv } from "@rag/db";
+import { loadRootEnv, resolveFromRepoRoot } from "@rag/db";
 
 loadRootEnv();
 
@@ -13,7 +12,9 @@ interface Args {
 const parseArgs = (argv: string[]): Args => {
   const dirFlag = argv.indexOf("--dir");
   return {
-    corpusDir: resolve(
+    // Anchored to the repo root, not the CLI's own directory: CORPUS_DIR in
+    // .env is written relative to the repository.
+    corpusDir: resolveFromRepoRoot(
       dirFlag !== -1 ? (argv[dirFlag + 1] ?? "") : (process.env.CORPUS_DIR ?? "./data/corpus"),
     ),
     watch: argv.includes("--watch"),

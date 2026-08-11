@@ -29,9 +29,17 @@ const getApiKey = (): string => {
 
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
 
+const MAX_ATTEMPTS = 8;
+
 /**
  * Retries only what is worth retrying: rate limits and server errors. A 400 is
- * a bug in our request and retrying it just delays the error.
+ * a bug in our request, and retrying it just delays the error.
+ *
+ * Rate limits get their own, much longer backoff. A Voyage account without a
+ * payment method is capped at 3 requests per minute — which a sub-second
+ * exponential backoff can never satisfy, so ingestion would fail on exactly
+ * the free-tier key a reviewer is most likely to use. `retry-after` is honored
+ * when present; otherwise the wait grows toward the length of a rate window.
  */
 const request = async <T>(path: string, body: unknown, attempt = 0): Promise<T> => {
   const response = await fetch(`${VOYAGE_BASE_URL}${path}`, {
@@ -47,9 +55,19 @@ const request = async <T>(path: string, body: unknown, attempt = 0): Promise<T> 
     return (await response.json()) as T;
   }
 
-  const retryable = response.status === 429 || response.status >= 500;
-  if (retryable && attempt < 4) {
-    await sleep(2 ** attempt * 500 + Math.random() * 250);
+  const rateLimited = response.status === 429;
+  const retryable = rateLimited || response.status >= 500;
+
+  if (retryable && attempt < MAX_ATTEMPTS) {
+    const retryAfter = Number(response.headers.get("retry-after"));
+    const wait =
+      Number.isFinite(retryAfter) && retryAfter > 0
+        ? retryAfter * 1000
+        : rateLimited
+          ? Math.min(25_000, 5_000 * (attempt + 1))
+          : 2 ** attempt * 500;
+
+    await sleep(wait + Math.random() * 250);
     return request<T>(path, body, attempt + 1);
   }
 

@@ -8,7 +8,8 @@ import {
   replaceDocument,
   startIngestionRun,
 } from "@rag/db";
-import { chunkMarkdown, embeddingText } from "../chunking/markdown-chunker";
+import { type Chunk, chunkMarkdown, embeddingText } from "../chunking/markdown-chunker";
+import { INGEST_WINDOW } from "../config";
 import { embed } from "../providers/voyage";
 import { planIngestion } from "./diff";
 import { discoverDocuments, type SourceDocument } from "./discover";
@@ -28,34 +29,98 @@ export interface IngestResult {
   failures: Array<{ path: string; error: string }>;
 }
 
-/** Chunks, embeds, and atomically replaces one document's chunks. */
-const indexDocument = async (doc: SourceDocument): Promise<void> => {
-  const chunks = chunkMarkdown(doc.content);
-  const vectors =
-    chunks.length > 0
-      ? await embed(
-          chunks.map((chunk) => embeddingText(chunk)),
-          "document",
-        )
-      : [];
+interface PreparedDocument {
+  source: SourceDocument;
+  chunks: Chunk[];
+}
 
-  await replaceDocument(
-    {
-      path: doc.path,
-      title: doc.title,
-      docType: doc.docType,
-      docDate: doc.docDate,
-      contentHash: doc.contentHash,
-      byteSize: doc.byteSize,
-    },
-    chunks.map((chunk, i) => ({
-      ordinal: chunk.ordinal,
-      headingPath: chunk.headingPath,
-      content: chunk.content,
-      tokenCount: chunk.tokenCount,
-      embedding: vectors[i] ?? null,
-    })),
-  );
+/**
+ * Embeds and persists a window of documents.
+ *
+ * Embedding is batched **across** documents, not per document. That matters
+ * enormously on a corpus shaped like this one: 142 documents each produce a
+ * single chunk, so embedding per document meant 142 sequential API round trips
+ * — roughly eighteen minutes. Batching across documents turns the same work
+ * into two requests.
+ *
+ * Documents are processed in windows so peak memory stays bounded however
+ * large the corpus grows.
+ */
+const indexWindow = async (
+  window: PreparedDocument[],
+  newPaths: Set<string>,
+  counts: IngestionCounts,
+  failures: Array<{ path: string; error: string }>,
+  report: (message: string) => void,
+): Promise<void> => {
+  // Flatten every chunk in the window into one list, remembering which
+  // document each came from so the vectors can be handed back afterwards.
+  const texts: string[] = [];
+  const owners: number[] = [];
+
+  window.forEach((prepared, documentIndex) => {
+    for (const chunk of prepared.chunks) {
+      texts.push(embeddingText(chunk));
+      owners.push(documentIndex);
+    }
+  });
+
+  let vectors: number[][];
+  try {
+    vectors = await embed(texts, "document");
+  } catch (error) {
+    // A batch failure cannot be attributed to a single document, so every
+    // document in the window is recorded as failed rather than silently
+    // skipped.
+    const message = error instanceof Error ? error.message : String(error);
+    for (const prepared of window) {
+      counts.failed++;
+      failures.push({ path: prepared.source.path, error: message });
+      await markDocumentFailed(prepared.source.path, message).catch(() => {});
+    }
+    report(`  FAILED to embed ${window.length} document(s): ${message}`);
+    return;
+  }
+
+  const vectorsByDocument = new Map<number, number[][]>();
+  owners.forEach((documentIndex, i) => {
+    const list = vectorsByDocument.get(documentIndex) ?? [];
+    const vector = vectors[i];
+    if (vector) list.push(vector);
+    vectorsByDocument.set(documentIndex, list);
+  });
+
+  for (const [documentIndex, prepared] of window.entries()) {
+    const documentVectors = vectorsByDocument.get(documentIndex) ?? [];
+    try {
+      await replaceDocument(
+        {
+          path: prepared.source.path,
+          title: prepared.source.title,
+          docType: prepared.source.docType,
+          docDate: prepared.source.docDate,
+          contentHash: prepared.source.contentHash,
+          byteSize: prepared.source.byteSize,
+        },
+        prepared.chunks.map((chunk, i) => ({
+          ordinal: chunk.ordinal,
+          headingPath: chunk.headingPath,
+          content: chunk.content,
+          tokenCount: chunk.tokenCount,
+          embedding: documentVectors[i] ?? null,
+        })),
+      );
+
+      if (newPaths.has(prepared.source.path)) counts.added++;
+      else counts.updated++;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      counts.failed++;
+      failures.push({ path: prepared.source.path, error: message });
+      await markDocumentFailed(prepared.source.path, message).catch(() => {});
+      report(`  FAILED ${prepared.source.path}: ${message}`);
+    }
+  }
 };
 
 /**
@@ -64,7 +129,7 @@ const indexDocument = async (doc: SourceDocument): Promise<void> => {
  * Incremental by construction: only added and changed documents are embedded,
  * so re-running after editing one file costs one embedding call rather than
  * 142. A failure on one document is recorded against that document and does
- * not abort the run — one malformed file should not block the rest.
+ * not abort the run.
  */
 export const ingest = async (options: IngestOptions): Promise<IngestResult> => {
   const startedAt = Date.now();
@@ -87,20 +152,19 @@ export const ingest = async (options: IngestOptions): Promise<IngestResult> => {
     );
 
     const newPaths = new Set(plan.added.map((doc) => doc.path));
+    const pending = [...plan.added, ...plan.updated];
 
-    for (const doc of [...plan.added, ...plan.updated]) {
-      try {
-        await indexDocument(doc);
-        if (newPaths.has(doc.path)) counts.added++;
-        else counts.updated++;
-        report(`  indexed ${doc.path}`);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        counts.failed++;
-        failures.push({ path: doc.path, error: message });
-        await markDocumentFailed(doc.path, message).catch(() => {});
-        report(`  FAILED ${doc.path}: ${message}`);
-      }
+    // Chunking is pure and cheap, so it happens up front — that is what makes
+    // embedding batchable across documents.
+    const prepared: PreparedDocument[] = pending.map((doc) => ({
+      source: doc,
+      chunks: chunkMarkdown(doc.content),
+    }));
+
+    for (let i = 0; i < prepared.length; i += INGEST_WINDOW) {
+      const window = prepared.slice(i, i + INGEST_WINDOW);
+      await indexWindow(window, newPaths, counts, failures, report);
+      report(`  indexed ${Math.min(i + window.length, prepared.length)}/${prepared.length}`);
     }
 
     if (plan.removed.length > 0) {
