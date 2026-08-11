@@ -1,7 +1,7 @@
 import type { IngestionCounts, IngestionTrigger, SearchSource } from "@rag/contracts";
 import { eq } from "drizzle-orm";
-import { getDb } from "../client.js";
-import { ingestionRuns, searchQueries } from "../schema/operations.js";
+import { getDb } from "../client";
+import { ingestionRuns, searchQueries } from "../schema/operations";
 
 export const startIngestionRun = async (trigger: IngestionTrigger): Promise<string> => {
   const [row] = await getDb()

@@ -1,6 +1,11 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import * as schema from "./schema/index.js";
+import { loadRootEnv } from "./env";
+import * as schema from "./schema/index";
+
+// See the note in @rag/auth: Next reads `.env` from the app directory, so the
+// monorepo root file has to be loaded explicitly.
+loadRootEnv();
 
 export type Database = ReturnType<typeof createDb>;
 

@@ -1,8 +1,8 @@
 import type { DocType, RetrievedChunk, SearchSource } from "@rag/contracts";
 import { type CandidateRow, fetchHybridCandidates, insertSearchQuery } from "@rag/db";
-import { RETRIEVAL } from "../config.js";
-import { embedOne, rerank } from "../providers/voyage.js";
-import { rewriteQuery } from "./rewrite.js";
+import { RETRIEVAL } from "../config";
+import { embedOne, rerank } from "../providers/voyage";
+import { rewriteQuery } from "./rewrite";
 
 export interface SearchOptions {
   query: string;

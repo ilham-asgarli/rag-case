@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { docTypeSchema } from "./common.js";
+import { docTypeSchema } from "./common";
 
 /**
  * Every score that contributed to a chunk's position, carried through to the

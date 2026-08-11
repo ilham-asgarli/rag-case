@@ -1,4 +1,4 @@
-import { EMBED_BATCH_SIZE, MODELS } from "../config.js";
+import { EMBED_BATCH_SIZE, MODELS } from "../config";
 
 /**
  * Minimal typed client for the two Voyage endpoints this project uses.

@@ -1,5 +1,5 @@
-import { CHUNKING } from "../config.js";
-import { estimateTokens } from "./tokens.js";
+import { CHUNKING } from "../config";
+import { estimateTokens } from "./tokens";
 
 export interface Chunk {
   ordinal: number;

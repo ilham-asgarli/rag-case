@@ -8,10 +8,10 @@ import {
   replaceDocument,
   startIngestionRun,
 } from "@rag/db";
-import { chunkMarkdown, embeddingText } from "../chunking/markdown-chunker.js";
-import { embed } from "../providers/voyage.js";
-import { planIngestion } from "./diff.js";
-import { discoverDocuments, type SourceDocument } from "./discover.js";
+import { chunkMarkdown, embeddingText } from "../chunking/markdown-chunker";
+import { embed } from "../providers/voyage";
+import { planIngestion } from "./diff";
+import { discoverDocuments, type SourceDocument } from "./discover";
 
 export interface IngestOptions {
   corpusDir: string;

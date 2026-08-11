@@ -1,5 +1,5 @@
-import { MODELS } from "../config.js";
-import { getAnthropic } from "../providers/anthropic.js";
+import { MODELS } from "../config";
+import { getAnthropic } from "../providers/anthropic";
 
 const SYSTEM = `You rewrite a follow-up question into a standalone search query.
 

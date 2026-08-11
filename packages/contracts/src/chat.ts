@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { errorCodeSchema } from "./common.js";
-import { retrievedChunkSchema } from "./search.js";
+import { errorCodeSchema } from "./common";
+import { retrievedChunkSchema } from "./search";
 
 /**
  * One supporting quote behind one claim.

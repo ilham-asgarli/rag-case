@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { type IndexedDocument, planIngestion } from "./diff.js";
-import type { SourceDocument } from "./discover.js";
+import { type IndexedDocument, planIngestion } from "./diff";
+import type { SourceDocument } from "./discover";
 
 const src = (path: string, hash: string): SourceDocument => ({
   path,

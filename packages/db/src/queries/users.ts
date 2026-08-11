@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
-import { getDb } from "../client.js";
-import { user } from "../schema/auth.js";
+import { getDb } from "../client";
+import { user } from "../schema/auth";
 
 /**
  * User queries.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fuse } from "./rrf.js";
+import { fuse } from "./rrf";
 
 describe("fuse (Reciprocal Rank Fusion)", () => {
   it("ranks a chunk found by both arms above one found by a single arm", () => {

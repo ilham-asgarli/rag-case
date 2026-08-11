@@ -1,8 +1,8 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import type { Citation, RetrievedChunk } from "@rag/contracts";
-import { ANSWER, MODELS } from "../config.js";
-import { getAnthropic } from "../providers/anthropic.js";
-import { ANSWER_SYSTEM_PROMPT, formatDocumentContext } from "./prompt.js";
+import { ANSWER, MODELS } from "../config";
+import { getAnthropic } from "../providers/anthropic";
+import { ANSWER_SYSTEM_PROMPT, formatDocumentContext } from "./prompt";
 
 export type AnswerEvent =
   | { type: "delta"; text: string }

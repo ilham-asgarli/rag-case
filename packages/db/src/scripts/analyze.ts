@@ -1,5 +1,5 @@
 import postgres from "postgres";
-import { loadRootEnv } from "../env.js";
+import { loadRootEnv } from "../env";
 
 loadRootEnv();
 

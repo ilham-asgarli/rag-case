@@ -13,7 +13,8 @@
       "!**/node_modules",
       "!**/migrations",
       "!data",
-      "!packages/db/src/schema/auth.ts"
+      "!packages/db/src/schema/auth.ts",
+      "!apps/web/src/app/globals.css"
     ]
   },
   "formatter": {

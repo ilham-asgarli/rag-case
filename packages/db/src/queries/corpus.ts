@@ -1,7 +1,7 @@
 import type { DocType } from "@rag/contracts";
 import { eq, inArray, sql } from "drizzle-orm";
-import { getDb } from "../client.js";
-import { chunks, documents } from "../schema/corpus.js";
+import { getDb } from "../client";
+import { chunks, documents } from "../schema/corpus";
 
 /**
  * Corpus reads and writes.

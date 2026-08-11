@@ -1,9 +1,14 @@
 import { oauthProvider } from "@better-auth/oauth-provider";
 import { MCP_SEARCH_SCOPE } from "@rag/contracts";
-import { getDb, schema } from "@rag/db";
+import { getDb, loadRootEnv, schema } from "@rag/db";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { jwt } from "better-auth/plugins";
+
+// Next.js loads `.env` from the app directory, which in a monorepo is not
+// where the file lives. Loading it here makes this package work the same from
+// `next build`, the MCP server, and the seed script.
+loadRootEnv();
 
 const requireEnv = (name: string): string => {
   const value = process.env[name];

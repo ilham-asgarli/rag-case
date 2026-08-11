@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { chunkMarkdown, embeddingText } from "./markdown-chunker.js";
-import { estimateTokens } from "./tokens.js";
+import { chunkMarkdown, embeddingText } from "./markdown-chunker";
+import { estimateTokens } from "./tokens";
 
 const para = (n: number): string => `${"word ".repeat(n).trim()}.`;
 

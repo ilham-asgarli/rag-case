@@ -1,4 +1,4 @@
-import type { SourceDocument } from "./discover.js";
+import type { SourceDocument } from "./discover";
 
 export interface IndexedDocument {
   id: string;

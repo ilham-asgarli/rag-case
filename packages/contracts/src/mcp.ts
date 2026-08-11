@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { docTypeSchema } from "./common.js";
+import { docTypeSchema } from "./common";
 
 /**
  * MCP tool input schemas.

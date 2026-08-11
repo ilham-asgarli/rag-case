@@ -1,4 +1,4 @@
-import { RETRIEVAL } from "../config.js";
+import { RETRIEVAL } from "../config";
 
 export interface RankedCandidate {
   chunkId: string;

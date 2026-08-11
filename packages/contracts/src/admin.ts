@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { docTypeSchema, roleSchema, searchSourceSchema } from "./common.js";
+import { docTypeSchema, roleSchema, searchSourceSchema } from "./common";
 
 export const documentStatusSchema = z.enum(["indexed", "failed", "deleted"]);
 export type DocumentStatus = z.infer<typeof documentStatusSchema>;
