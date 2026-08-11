@@ -1,3 +1,4 @@
+import { dashboardStatsSchema } from "@rag/contracts";
 import { MODELS } from "@rag/core";
 import { getIndexHealth, getSearchStats, listIngestionRuns } from "@rag/db";
 import { NextResponse } from "next/server";
@@ -15,19 +16,22 @@ export async function GET(): Promise<Response> {
       listIngestionRuns(10),
     ]);
 
-    return NextResponse.json({
-      index: {
-        ...health,
-        embeddingModel: MODELS.embedding,
-        embeddingDimensions: MODELS.embeddingDimensions,
-        rerankModel: MODELS.rerank,
-        answerModel: MODELS.answer,
-        vectorIndex: "HNSW (cosine)",
-      },
-      search,
-      latestRun: runs[0] ?? null,
-      runs,
-    });
+    // Parsing on the way out keeps the response honest: a query that silently changes shape or
+    // type fails here rather than reaching the dashboard as malformed JSON.
+    return NextResponse.json(
+      dashboardStatsSchema.parse({
+        index: {
+          ...health,
+          embeddingModel: MODELS.embedding,
+          embeddingDimensions: MODELS.embeddingDimensions,
+          rerankModel: MODELS.rerank,
+          answerModel: MODELS.answer,
+          vectorIndex: "HNSW (cosine)",
+        },
+        search,
+        runs,
+      }),
+    );
   } catch (error) {
     return toErrorResponse(error);
   }

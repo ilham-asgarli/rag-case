@@ -26,6 +26,17 @@ as the first statement of the first migration.
 Still read every generated migration before applying it. A rename that drizzle-kit reads as
 drop-then-add will destroy data regardless of what it gets right elsewhere.
 
+## Raw SQL in a select needs `.mapWith()`
+
+`sql<number>` is a type *assertion*, not a conversion. The postgres-js driver hands Drizzle raw
+values and Drizzle decodes them per field: real columns carry a decoder, bare `sql` fragments do
+not. So an aggregate written as `sql<number>\`count(*)\`` arrives as the string `"142"`, and
+`sql<Date>\`max(indexed_at)\`` arrives as a timestamp string that throws on `.toISOString()`.
+
+Give every raw fragment a decoder — `.mapWith(Number)` for numerics, `.mapWith(someColumn)` to
+borrow a column's decoder for dates. Assert the type only where the driver already returns it
+(`to_char(...)` really is text).
+
 ## Invariants
 
 - The `vector(n)` dimension must equal the embedding model's output dimension (`voyage-4` →

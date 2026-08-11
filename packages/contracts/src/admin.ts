@@ -109,7 +109,7 @@ export type SearchStats = z.infer<typeof searchStatsSchema>;
 export const dashboardStatsSchema = z.object({
   index: indexHealthSchema,
   search: searchStatsSchema,
-  latestRun: ingestionRunSchema.nullable(),
+  runs: z.array(ingestionRunSchema),
 });
 export type DashboardStats = z.infer<typeof dashboardStatsSchema>;
 

@@ -107,16 +107,17 @@ export const getIndexHealth = async () => {
   const [docStats] = await db
     .select({
       total: count(),
-      indexed: sql<number>`count(*) filter (where ${documents.status} = 'indexed')::int`,
-      failed: sql<number>`count(*) filter (where ${documents.status} = 'failed')::int`,
-      lastIndexedAt: sql<Date | null>`max(${documents.indexedAt})`,
+      indexed: sql`count(*) filter (where ${documents.status} = 'indexed')`.mapWith(Number),
+      failed: sql`count(*) filter (where ${documents.status} = 'failed')`.mapWith(Number),
+      // Borrows the column's timestamp decoder; a bare fragment would arrive as a string.
+      lastIndexedAt: sql`max(${documents.indexedAt})`.mapWith(documents.indexedAt),
     })
     .from(documents);
 
   const [chunkStats] = await db
     .select({
       total: count(),
-      avgTokens: sql<number>`coalesce(avg(${chunks.tokenCount}), 0)::float`,
+      avgTokens: sql`coalesce(avg(${chunks.tokenCount}), 0)`.mapWith(Number),
     })
     .from(chunks);
 
@@ -137,11 +138,17 @@ export const getSearchStats = async (): Promise<SearchStats> => {
   const [totals] = await db
     .select({
       total: count(),
-      // percentile_cont needs a numeric input; latency is stored as int ms.
-      p50: sql<number>`coalesce(percentile_cont(0.5) within group (order by ${searchQueries.latencyMs}), 0)::int`,
-      p95: sql<number>`coalesce(percentile_cont(0.95) within group (order by ${searchQueries.latencyMs}), 0)::int`,
-      abstained: sql<number>`count(*) filter (where ${searchQueries.abstained} is true)::int`,
-      withAnswer: sql<number>`count(*) filter (where ${searchQueries.abstained} is not null)::int`,
+      // percentile_cont interpolates, so round back to whole milliseconds.
+      p50: sql`coalesce(percentile_cont(0.5) within group (order by ${searchQueries.latencyMs}), 0)::int`.mapWith(
+        Number,
+      ),
+      p95: sql`coalesce(percentile_cont(0.95) within group (order by ${searchQueries.latencyMs}), 0)::int`.mapWith(
+        Number,
+      ),
+      abstained: sql`count(*) filter (where ${searchQueries.abstained} is true)`.mapWith(Number),
+      withAnswer: sql`count(*) filter (where ${searchQueries.abstained} is not null)`.mapWith(
+        Number,
+      ),
     })
     .from(searchQueries);
 

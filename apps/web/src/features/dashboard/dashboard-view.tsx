@@ -1,6 +1,6 @@
 "use client";
 
-import type { DashboardStats, DocumentSummary, IngestionRun, UserSummary } from "@rag/contracts";
+import type { DashboardStats, DocumentSummary, UserSummary } from "@rag/contracts";
 import { useCallback, useEffect, useState } from "react";
 import { Badge, Button, Card, EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { formatDateTime, formatDuration } from "@/lib/utils";
@@ -47,7 +47,7 @@ const VolumeChart = ({ data }: { data: Array<{ day: string; count: number }> }) 
 
 export const DashboardView = () => {
   const [tab, setTab] = useState<Tab>("overview");
-  const [stats, setStats] = useState<(DashboardStats & { runs: IngestionRun[] }) | null>(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
   const [documents, setDocuments] = useState<DocumentSummary[] | null>(null);
   const [users, setUsers] = useState<UserSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
