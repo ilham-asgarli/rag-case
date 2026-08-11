@@ -18,10 +18,12 @@ const PUBLIC_PATHS = ["/sign-in", "/sign-up"];
 export function proxy(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
 
-  // Auth endpoints, OAuth discovery, and static assets must stay reachable.
+  // Auth endpoints, OAuth discovery, the health probe, and static assets must
+  // stay reachable without a session.
   if (
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/.well-known") ||
+    pathname === "/api/health" ||
     pathname.startsWith("/_next")
   ) {
     return NextResponse.next();

@@ -12,7 +12,7 @@
     "CORPUS_DIR",
     "MCP_PORT",
     "MCP_RESOURCE_URL",
-    "NEXT_PUBLIC_APP_URL"
+    "AUTH_INTERNAL_URL"
   ],
   "tasks": {
     "build": {

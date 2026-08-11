@@ -1,0 +1,21 @@
+# Never ship secrets or host build artefacts into an image
+.env
+.env.*
+!.env.example
+
+node_modules
+**/node_modules
+.next
+**/.next
+dist
+**/dist
+.turbo
+**/.turbo
+coverage
+
+.git
+.github
+.claude
+*.log
+*.md
+!README.md

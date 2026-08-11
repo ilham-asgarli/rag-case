@@ -26,33 +26,47 @@ Built for the Playable Factory AI Software Engineer case study.
 
 ## Quick start
 
-Requires **Node 22+**, **pnpm 11+**, and **Docker**.
+Requires **Docker** only.
 
 ```bash
-# 1. Configuration
 cp .env.example .env
-#    Add ANTHROPIC_API_KEY and VOYAGE_API_KEY (both have free tiers).
-#    Generate a secret:  node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+#  Add ANTHROPIC_API_KEY and VOYAGE_API_KEY (both have free tiers).
+#  Generate a secret:  openssl rand -base64 32
 
-# 2. Database (PostgreSQL 18 + pgvector)
-docker compose up -d
-
-# 3. Install, migrate, seed
-pnpm install
-pnpm db:migrate
-pnpm db:seed
-
-# 4. Index the corpus (committed at data/corpus, 142 documents)
-pnpm ingest
-
-# 5. Run both servers
-pnpm dev
+docker compose up
 ```
+
+That is the whole setup. Compose builds the images, starts PostgreSQL with pgvector, applies
+migrations, seeds the demo users, starts both servers, and indexes the 142-document corpus.
 
 | Service | URL |
 | --- | --- |
 | Web app (chat + dashboard) | http://localhost:3000 |
 | MCP server | http://localhost:8787/mcp |
+
+The app is reachable as soon as `web` reports healthy. Indexing runs alongside it and takes about
+four minutes on a Voyage account without a payment method, which is rate limited to 3 requests per
+minute — until it finishes, the corpus is partially indexed and answers will abstain. Watch it
+with `docker compose logs -f ingest`.
+
+```bash
+docker compose down      # stop
+docker compose down -v   # stop and delete the database volume
+```
+
+### Running it for development
+
+Docker is the way to *run* the project; hot reload is nicer for *working* on it. Start only the
+database in Docker and run the servers on the host, which additionally needs **Node 22+** and
+**pnpm 11+**:
+
+```bash
+docker compose up -d postgres
+pnpm install
+pnpm db:migrate && pnpm db:seed
+pnpm ingest
+pnpm dev
+```
 
 ### Demo credentials
 
@@ -360,7 +374,7 @@ Not deployed. The shape it is built for:
 
 | Piece | Target | Notes |
 | --- | --- | --- |
-| `apps/web` | Vercel | Set every variable from `.env.example`; `BETTER_AUTH_URL` and `NEXT_PUBLIC_APP_URL` must be the public origin |
+| `apps/web` | Vercel, or the `web` image from the Dockerfile | Set every variable from `.env.example`; `BETTER_AUTH_URL` must be the public origin |
 | Database | Neon or Supabase | Both ship pgvector. Run `pnpm db:migrate`, then `pnpm db:seed` |
 | `apps/mcp` | Railway, Fly.io, or a container | Set `MCP_RESOURCE_URL` to its public URL — it is the token audience, so it must match exactly |
 | Corpus | Committed | Run `pnpm ingest` once after deploy, or trigger it from the dashboard |
