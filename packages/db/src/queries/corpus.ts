@@ -139,6 +139,13 @@ export interface CandidateQuery {
  * joined FULL OUTER so a chunk found by either arm survives, then fused by
  * Reciprocal Rank Fusion.
  *
+ * `websearch_to_tsquery` ANDs its terms, which means a natural-language question
+ * matches only a chunk carrying every stem — usually nothing, leaving the lexical
+ * arm empty exactly where the exact figures live. So the conjunction is relaxed to
+ * a disjunction when, and only when, the strict form matches no chunk: precise
+ * queries keep their precision, and verbose ones still get a lexical signal.
+ * `ts_rank_cd` then orders the relaxed matches by term coverage and proximity.
+ *
  * The fusion is done in SQL rather than in TypeScript because that is where
  * the ranks are produced, and because it avoids shipping 80 rows of document
  * text over the wire only to score and discard most of them.
@@ -148,7 +155,19 @@ export const fetchHybridCandidates = async (query: CandidateQuery): Promise<Cand
   const docTypeFilter = query.docType ? sql`AND d.doc_type = ${query.docType}` : sql``;
 
   const result = await getDb().execute<CandidateRow>(sql`
-    WITH dense AS (
+    WITH tsq AS (
+      SELECT websearch_to_tsquery('english', ${query.queryText}) AS strict
+    ),
+    lex_query AS (
+      SELECT CASE
+               WHEN EXISTS (SELECT 1 FROM chunks c WHERE c.tsv @@ tsq.strict) THEN tsq.strict
+               -- Relaxing a negation to OR inverts its meaning, so leave those strict.
+               WHEN strpos(tsq.strict::text, '!') > 0 THEN tsq.strict
+               ELSE replace(tsq.strict::text, '&', '|')::tsquery
+             END AS query
+      FROM tsq
+    ),
+    dense AS (
       SELECT c.id,
              ROW_NUMBER() OVER (ORDER BY c.embedding <=> ${vectorLiteral}::vector) AS rank
       FROM chunks c
@@ -161,8 +180,8 @@ export const fetchHybridCandidates = async (query: CandidateQuery): Promise<Cand
       SELECT c.id,
              ROW_NUMBER() OVER (ORDER BY ts_rank_cd(c.tsv, q.query) DESC) AS rank
       FROM chunks c
-      JOIN documents d ON d.id = c.document_id,
-           websearch_to_tsquery('english', ${query.queryText}) AS q(query)
+      JOIN documents d ON d.id = c.document_id
+      CROSS JOIN lex_query q
       WHERE c.tsv @@ q.query AND d.status = 'indexed' ${docTypeFilter}
       ORDER BY ts_rank_cd(c.tsv, q.query) DESC
       LIMIT ${query.perArm}
