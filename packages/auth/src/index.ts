@@ -20,6 +20,13 @@ const requireEnv = (name: string): string => {
 
 const baseURL = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
 
+/**
+ * The MCP server's OAuth resource identifier, and the audience a client asks for
+ * with RFC 8707 `resource`. It must match `MCP_RESOURCE_URL` in `apps/mcp`
+ * exactly — that server rejects any token whose `aud` is something else.
+ */
+const mcpResourceUrl = process.env.MCP_RESOURCE_URL ?? "http://localhost:8787";
+
 /** Issuer for tokens this server mints. The MCP resource server verifies against it. */
 export const AUTH_ISSUER = `${baseURL}/api/auth`;
 export const JWKS_URL = `${AUTH_ISSUER}/jwks`;
@@ -80,6 +87,11 @@ export const auth = betterAuth({
       allowDynamicClientRegistration: true,
       allowUnauthenticatedClientRegistration: true,
       scopes: [MCP_SEARCH_SCOPE],
+      // RFC 8707. Without the MCP server listed here the token endpoint refuses
+      // `resource=<mcp url>` outright, and a token minted without that audience
+      // is one the MCP server must reject — so the flow could never complete.
+      // Listing it is also the allowlist: any other requested audience is denied.
+      validAudiences: [baseURL, mcpResourceUrl],
     }),
   ],
 });

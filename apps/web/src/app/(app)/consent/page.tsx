@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { Button, Card } from "@/components/ui";
+import { authClient } from "@/lib/auth-client";
 
 const SCOPE_LABELS: Record<string, string> = {
   "corpus:search": "Search the documentation corpus and read matching passages",
@@ -21,23 +22,27 @@ const SCOPE_LABELS: Record<string, string> = {
 const ConsentForm = () => {
   const params = useSearchParams();
   const [busy, setBusy] = useState<"accept" | "reject" | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const clientName = params.get("client_name") ?? params.get("client_id") ?? "An application";
   const scopes = (params.get("scope") ?? "").split(" ").filter(Boolean);
 
   const decide = async (accept: boolean) => {
     setBusy(accept ? "accept" : "reject");
-    const response = await fetch("/api/auth/oauth2/consent", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ accept }),
-    });
 
-    const result = (await response.json().catch(() => null)) as { redirectURI?: string } | null;
-    if (result?.redirectURI) {
-      window.location.href = result.redirectURI;
+    // Goes through authClient rather than fetch: its oauth-provider plugin
+    // attaches the signed authorization query this page was redirected with,
+    // which the consent endpoint requires to identify the pending request.
+    const { data, error } = await authClient.oauth2.consent({ accept });
+
+    // Both outcomes redirect: approval carries the authorization code back to
+    // the client, denial carries `error=access_denied`.
+    if (data?.url) {
+      window.location.href = data.url;
       return;
     }
+
+    setError(error?.message ?? "Authorization could not be completed. Please try again.");
     setBusy(null);
   };
 
@@ -58,6 +63,15 @@ const ConsentForm = () => {
           </li>
         ))}
       </ul>
+
+      {error ? (
+        <p
+          role="alert"
+          className="mb-3 rounded-lg bg-critical-soft px-3 py-2 text-critical text-sm"
+        >
+          {error}
+        </p>
+      ) : null}
 
       <div className="flex gap-2">
         <Button className="flex-1" onClick={() => void decide(true)} disabled={busy !== null}>
