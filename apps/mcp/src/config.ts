@@ -20,8 +20,24 @@ const authPublic = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
  */
 const authInternal = process.env.AUTH_INTERNAL_URL ?? authPublic;
 
+/**
+ * Browser-based MCP clients — MCP Inspector, and anything else served from a
+ * different origin — call this server directly with `fetch`, so without CORS the
+ * browser blocks the response before the client can read the 401 challenge that
+ * starts the OAuth flow. An explicit list is required in production; local
+ * development allows any loopback origin, since the port varies per tool.
+ */
+const parseAllowedOrigins = (raw: string | undefined): string[] | "loopback" => {
+  const entries = (raw ?? "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  return entries.length > 0 ? entries : "loopback";
+};
+
 export const CONFIG = {
   port: Number(process.env.MCP_PORT ?? 8787),
+  allowedOrigins: parseAllowedOrigins(process.env.MCP_ALLOWED_ORIGINS),
   /** This server's OAuth resource identifier. Tokens must carry it as `aud`. */
   resourceUrl: process.env.MCP_RESOURCE_URL ?? "http://localhost:8787",
   /** Advertised to clients, so it must be the publicly reachable origin. */
