@@ -15,7 +15,7 @@ const challenge = (error: string, description: string): string =>
     "Bearer",
     `error="${error}"`,
     `error_description="${description}"`,
-    `resource_metadata="${CONFIG.resourceUrl}/.well-known/oauth-protected-resource"`,
+    `resource_metadata="${CONFIG.resourceMetadataUrl}"`,
   ].join(" ");
 
 export const unauthorized = (c: Context, description: string): Response =>
@@ -67,7 +67,11 @@ export const authenticate = async (c: Context): Promise<VerifiedToken | Response
 /** RFC 9728 protected resource metadata. */
 export const protectedResourceMetadata = () => ({
   resource: CONFIG.resourceUrl,
-  authorization_servers: [CONFIG.authorizationServer],
+  // The issuer identifier, not the bare origin: a client derives the RFC 8414
+  // metadata URL from this value, and the document it finds there must declare
+  // exactly this issuer back. Advertising the origin sends clients to a URL
+  // whose implied issuer disagrees with the document, which they reject.
+  authorization_servers: [CONFIG.issuer],
   scopes_supported: [MCP_SEARCH_SCOPE],
   bearer_methods_supported: ["header"],
   resource_documentation: `${CONFIG.authorizationServer}/chat`,

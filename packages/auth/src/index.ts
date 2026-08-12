@@ -25,7 +25,7 @@ const baseURL = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
  * with RFC 8707 `resource`. It must match `MCP_RESOURCE_URL` in `apps/mcp`
  * exactly — that server rejects any token whose `aud` is something else.
  */
-const mcpResourceUrl = process.env.MCP_RESOURCE_URL ?? "http://localhost:8787";
+const mcpResourceUrl = process.env.MCP_RESOURCE_URL ?? "http://localhost:8787/mcp";
 
 /** Issuer for tokens this server mints. The MCP resource server verifies against it. */
 export const AUTH_ISSUER = `${baseURL}/api/auth`;

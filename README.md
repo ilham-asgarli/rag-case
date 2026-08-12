@@ -260,11 +260,20 @@ Two tools, both read-only:
 `get_document` resolves by exact indexed path rather than reading from disk, so a caller-supplied
 string can never traverse the filesystem.
 
-### Authentication (OAuth 2.1 / OIDC)
+### Authentication (OAuth 2.1)
 
-The web app is the **authorization server** (`@better-auth/oauth-provider`), publishing discovery
-at `/.well-known/oauth-authorization-server` and `/.well-known/openid-configuration`, with RFC
-7591 dynamic client registration so a client can register itself at connect time.
+The web app is the **authorization server** (`@better-auth/oauth-provider`), with RFC 7591
+dynamic client registration so a client can register itself at connect time.
+
+Its issuer is `http://localhost:3000/api/auth`, so RFC 8414 metadata is published at
+`/.well-known/oauth-authorization-server/api/auth` — §3.1 inserts the well-known segment before
+the issuer's path. Serving it at the origin root instead would claim an issuer of
+`http://localhost:3000`, contradicting the document, and a conforming client rejects that
+mismatch. Clients find this URL by deriving it from the `authorization_servers` entry in the MCP
+server's protected resource metadata.
+
+There is no `/.well-known/openid-configuration`: the only scope issued is `corpus:search`, so
+this is a plain OAuth 2.1 authorization server rather than an OIDC provider.
 
 The MCP server is a **protected resource**. It verifies the bearer token's signature against the
 published JWKS and checks **issuer, audience, and scope** — audience is not optional, or it would
@@ -376,7 +385,7 @@ Not deployed. The shape it is built for:
 | --- | --- | --- |
 | `apps/web` | Vercel, or the `web` image from the Dockerfile | Set every variable from `.env.example`; `BETTER_AUTH_URL` must be the public origin |
 | Database | Neon or Supabase | Both ship pgvector. Run `pnpm db:migrate`, then `pnpm db:seed` |
-| `apps/mcp` | Railway, Fly.io, or a container | Set `MCP_RESOURCE_URL` to its public URL — it is the token audience, so it must match exactly |
+| `apps/mcp` | Railway, Fly.io, or a container | Set `MCP_RESOURCE_URL` to its public MCP endpoint, `/mcp` included — it is the token audience and the identifier clients send, so it must match exactly |
 | Corpus | Committed | Run `pnpm ingest` once after deploy, or trigger it from the dashboard |
 
 Two things would change for real production use, both deliberate omissions rather than

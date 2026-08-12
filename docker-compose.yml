@@ -12,7 +12,7 @@ x-app-env: &app-env
   BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET in .env}
   # What the browser sees. Tokens are minted with this origin.
   BETTER_AUTH_URL: http://localhost:3000
-  MCP_RESOURCE_URL: http://localhost:8787
+  MCP_RESOURCE_URL: http://localhost:8787/mcp
   CORPUS_DIR: /app/data/corpus
 
 services:

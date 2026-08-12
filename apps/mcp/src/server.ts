@@ -57,13 +57,11 @@ app.use(
  * RFC 9728. Served unauthenticated by design — this is the document a client
  * with no token fetches to discover which authorization server to use.
  *
- * Both spellings are served: RFC 9728 locates the metadata for a resource that
- * has a path at `/.well-known/oauth-protected-resource/<path>`, and clients
- * routinely probe that form for an endpoint like `/mcp` before falling back to
- * the root document.
+ * The path is derived from the resource identifier rather than written out, so
+ * the URL and the `resource` inside the document cannot drift apart: §3.3 has a
+ * client reject a document whose `resource` is not the identifier it looked up.
  */
-app.get("/.well-known/oauth-protected-resource", (c) => c.json(protectedResourceMetadata()));
-app.get("/.well-known/oauth-protected-resource/mcp", (c) => c.json(protectedResourceMetadata()));
+app.get(CONFIG.resourceMetadataPath, (c) => c.json(protectedResourceMetadata()));
 
 app.get("/health", (c) => c.json({ status: "ok", resource: CONFIG.resourceUrl }));
 
